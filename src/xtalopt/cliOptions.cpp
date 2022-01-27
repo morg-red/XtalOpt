@@ -13,6 +13,12 @@
 
  ***********************************************************************/
 
+ /********
+ Modified by Morgan Redington, 2022
+ - Added: option to automatically cancel job after maxNumStructures is
+ generated
+ *********/
+
 #include <memory>
 
 #include <QFile>
@@ -99,6 +105,8 @@ static const QStringList keywords = { "empiricalFormula",
                                       "logErrorDirectories",
                                       "autoCancelJobAfterTime",
                                       "hoursForAutoCancelJob",
+                                      "autoCancelJobAfterStructures", //added
+                                      "structuresForAutoCancelJob", //added
                                       "numOptimizationSteps",
                                       "host",
                                       "port",
@@ -435,7 +443,7 @@ bool XtalOptCLIOptions::processOptions(const QHash<QString, QString>& options,
     xtalopt.failAction = OptBase::FA_Randomize;
   }
 
-  xtalopt.cutoff = options.value("maxNumStructures", "10000").toUInt();
+  xtalopt.cutoff = options.value("maxNumStructures", "10000").toUInt(); //TO DO
   xtalopt.m_calculateHardness =
     toBool(options.value("calculateHardness", "false"));
   xtalopt.m_hardnessFitnessWeight =
@@ -696,6 +704,14 @@ bool XtalOptCLIOptions::processOptions(const QHash<QString, QString>& options,
   if (xtalopt.m_cancelJobAfterTime) {
     xtalopt.m_hoursForCancelJobAfterTime =
       options.value("hoursForAutoCancelJob", "100.0").toDouble();
+  }
+
+  xtalopt.m_autoCancelJobAfterStructures =
+    toBool(options.value("autoCancelJobAfterStructures", "false"));
+
+  if (xtalopt.m_autoCancelJobAfterStructures) { //Added
+    xtalopt.m_structuresForAutoCancelJob = //Added
+      options.value("structuresForAutoCancelJob", "10000").toUInt(); //Added
   }
 
   if (anyRemote) {
@@ -1260,7 +1276,7 @@ void XtalOptCLIOptions::writeInitialRuntimeFile(XtalOpt& xtalopt)
     text += "unknown\n";
 
   text +=
-    QString("maxNumStructures = ") + QString::number(xtalopt.cutoff) + "\n";
+    QString("maxNumStructures = ") + QString::number(xtalopt.cutoff) + "\n";//TO DO
 
   text += QString("calculateHardness = ") +
           fromBool(xtalopt.m_calculateHardness) + "\n";
@@ -1325,6 +1341,8 @@ void XtalOptCLIOptions::writeInitialRuntimeFile(XtalOpt& xtalopt)
   if (xtalopt.m_cancelJobAfterTime) {
     text += QString("hoursForAutoCancelJob = ") +
             QString::number(xtalopt.m_hoursForCancelJobAfterTime) + "\n";
+
+  // To do: Add autoCancelJobAfterStructures lines
   }
 
   file.write(text.toLocal8Bit().data());
@@ -1448,7 +1466,7 @@ void XtalOptCLIOptions::processRuntimeOptions(
         qDebug() << "Warning: unrecognized jobFailAction: " << failAction;
         qDebug() << "Ignoring change in jobFailAction.";
       }
-    } else if (CICompare("maxNumStructures", option)) {
+    } else if (CICompare("maxNumStructures", option)) {//TO DO
       xtalopt.cutoff = options[option].toUInt();
     } else if (CICompare("calculateHardness", option)) {
       xtalopt.m_calculateHardness = toBool(options[option]);
@@ -1512,11 +1530,23 @@ void XtalOptCLIOptions::processRuntimeOptions(
       xtalopt.m_cancelJobAfterTime = toBool(options[option]);
     } else if (CICompare("hoursForAutoCancelJob", option)) {
       xtalopt.m_hoursForCancelJobAfterTime = options[option].toDouble();
+    } else if (CICompare("autoCancelJobAfterStructures", option)) { //added
+      xtalopt.m_autoCancelJobAfterStructures = toBool(options[option]); //added
+    } else if (CICompare("structuresForAutoCancelJob", option)){ //added
+      xtalopt.m_structuresForAutoCancelJob = options[option].toUInt(); //added
     } else {
       qDebug() << "Warning: option," << option << ", is not a valid runtime"
                << "option! It is being ignored.";
     }
   }
+
+//add exit condition for maxNumStructures
+/****
+if true:
+check for maxNumStructures
+if structures >= maxNumStructures
+end
+*****/
 
   // Sanity checks
   if (xtalopt.p_strip + xtalopt.p_perm + xtalopt.p_cross != 100) {

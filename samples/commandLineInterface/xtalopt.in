@@ -198,6 +198,8 @@
     # Autocancel job settings
       #autoCancelJobAfterTime = false
       #hoursForAutoCancelJob = 100.0
+      #autoCancelJobAfterStructures = false 
+      #structuresForAutoCancelJob = 10000 #set to maxNumStructures
 
 # End of queue interface settings
 
