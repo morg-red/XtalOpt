@@ -443,7 +443,7 @@ bool XtalOptCLIOptions::processOptions(const QHash<QString, QString>& options,
     xtalopt.failAction = OptBase::FA_Randomize;
   }
 
-  xtalopt.cutoff = options.value("maxNumStructures", "10000").toUInt(); //TO DO
+  xtalopt.cutoff = options.value("maxNumStructures", "1000").toUInt(); //TO DO
   xtalopt.m_calculateHardness =
     toBool(options.value("calculateHardness", "false"));
   xtalopt.m_hardnessFitnessWeight =
@@ -1342,7 +1342,7 @@ void XtalOptCLIOptions::writeInitialRuntimeFile(XtalOpt& xtalopt)
     text += QString("hoursForAutoCancelJob = ") +
             QString::number(xtalopt.m_hoursForCancelJobAfterTime) + "\n";
 
-  // To do: Add autoCancelJobAfterStructures lines
+  // To do: Add autoCancelJobAfterStructures lines?
   }
 
   file.write(text.toLocal8Bit().data());
@@ -1532,15 +1532,19 @@ void XtalOptCLIOptions::processRuntimeOptions(
       xtalopt.m_hoursForCancelJobAfterTime = options[option].toDouble();
     } else if (CICompare("autoCancelJobAfterStructures", option)) { //added
       xtalopt.m_autoCancelJobAfterStructures = toBool(options[option]); //added
-    } else if (CICompare("structuresForAutoCancelJob", option)){ //added
-      xtalopt.m_structuresForAutoCancelJob = options[option].toUInt(); //added
+    } else if (CICompare("structuresForAutoCancelJob", option)){ //added, MODIFY
+      xtalopt.m_structuresForAutoCancelJob = options[option].toUInt(); //added, MODIFY
     } else {
       qDebug() << "Warning: option," << option << ", is not a valid runtime"
                << "option! It is being ignored.";
     }
   }
 
-//add exit condition for maxNumStructures
+  if (xtalopt.m_autoCancelJobAfterStructures==TRUE && xtalopt.m_autoCancelJobAfterStructures >= xtalopt.cutoff){
+    printf ("Structure limit reached");
+    return EXIT_SUCCESS;
+  }
+//add exit condition for maxNumStructures?
 /****
 if true:
 check for maxNumStructures

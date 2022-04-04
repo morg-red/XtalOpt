@@ -5070,4 +5070,6 @@ void XtalOpt::readRuntimeOptions()
 {
   XtalOptCLIOptions::readRuntimeOptions(*this);
 }
+//Add exit condition here? exit vs quick exit?
+
 } // end namespace XtalOpt
